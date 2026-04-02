@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Punto Sur Sureste</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+  header {
+    background: #0f172a; color: #fff;
+    padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 800; letter-spacing: -.5px; }
+  nav a {
+    color: #94a3b8; text-decoration: none;
+    font-size: .85rem; margin-left: 1.2rem; font-weight: 600;
+  }
+  nav a:hover { color: #fff; }
+
+  .filtros {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: .6rem 1.5rem; display: flex; gap: .5rem; flex-wrap: wrap;
+  }
+  .filtros button {
+    padding: .3rem .75rem; border-radius: 99px;
+    border: 1.5px solid #e2e8f0; background: #fff;
+    font-size: .8rem; font-weight: 700; cursor: pointer; color: #475569;
+    transition: all .15s;
+  }
+  .filtros button.active, .filtros button:hover {
+    background: #0f172a; color: #fff; border-color: #0f172a;
+  }
+
+  .contenedor { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+
+  /* NOTA PRINCIPAL */
+  .principal {
+    display: grid; grid-template-columns: 1.6fr 1fr;
+    gap: 1.5rem; margin-bottom: 1.5rem;
+  }
+  @media(max-width:700px){ .principal { grid-template-columns: 1fr; } }
+
+  .principal-img {
+    position: relative; border-radius: 10px; overflow: hidden;
+    cursor: pointer; aspect-ratio: 16/9;
+  }
+  .principal-img img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform .3s;
+  }
+  .principal-img:hover img { transform: scale(1.03); }
+  .principal-img .overlay {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, #000c);
+    padding: 2rem 1rem .75rem;
+  }
+  .principal-img .overlay h2 {
+    color: #fff; font-size: 1.2rem; font-weight: 800; line-height: 1.3;
+  }
+  .principal-img .overlay .cat {
+    display: inline-block; margin-bottom: .4rem;
+    background: #6366f1; color: #fff;
+    font-size: .7rem; font-weight: 700; padding: .15rem .5rem; border-radius: 99px;
+  }
+
+  .secundarias { display: flex; flex-direction: column; gap: .75rem; }
+  .sec-card {
+    display: flex; gap: .75rem; background: #fff;
+    border-radius: 8px; overflow: hidden; cursor: pointer;
+    transition: box-shadow .15s;
+  }
+  .sec-card:hover { box-shadow: 0 4px 12px #0002; }
+  .sec-card img { width: 90px; height: 70px; object-fit: cover; flex-shrink: 0; }
+  .sec-card .texto { padding: .5rem .6rem; }
+  .sec-card .cat { font-size: .68rem; font-weight: 700; color: #6366f1; margin-bottom: .2rem; }
+  .sec-card h3 { font-size: .82rem; font-weight: 700; line-height: 1.3; color: #1e293b; }
+
+  /* GRILLA */
+  .grilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .nota-card {
+    background: #fff; border-radius: 8px; overflow: hidden;
+    cursor: pointer; transition: box-shadow .15s;
+  }
+  .nota-card:hover { box-shadow: 0 4px 14px #0002; }
+  .nota-card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; }
+  .nota-card .cuerpo { padding: .75rem; }
+  .nota-card .cat { font-size: .7rem; font-weight: 700; color: #6366f1; margin-bottom: .3rem; }
+  .nota-card h3 { font-size: .88rem; font-weight: 700; line-height: 1.35; }
+  .nota-card p  { font-size: .78rem; color: #64748b; margin-top: .3rem; line-height: 1.4; }
+  .nota-card .meta { font-size: .7rem; color: #94a3b8; margin-top: .5rem; }
+
+  .spinner {
+    text-align: center; padding: 3rem; color: #94a3b8; font-size: .9rem;
+  }
+
+  footer {
+    text-align: center; padding: 1.5rem; font-size: .78rem; color: #94a3b8;
+    border-top: 1px solid #e2e8f0; margin-top: 2rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Punto Sur</h1>
+  <nav>
+    <a href="#" onclick="filtrar('')">Inicio</a>
+    <a href="#" onclick="filtrar('Política')">Política</a>
+    <a href="#" onclick="filtrar('Sociedad')">Sociedad</a>
+    <a href="#" onclick="filtrar('Seguridad')">Seguridad</a>
+  </nav>
+</header>
+
+<div class="filtros">
+  <button class="active" onclick="filtrar('',this)">Todas</button>
+  <button onclick="filtrar('Política',this)">Política</button>
+  <button onclick="filtrar('Sociedad',this)">Sociedad</button>
+  <button onclick="filtrar('Seguridad',this)">Seguridad</button>
+  <button onclick="filtrar('Economía',this)">Economía</button>
+  <button onclick="filtrar('Cultura',this)">Cultura</button>
+  <button onclick="filtrar('Deportes',this)">Deportes</button>
+</div>
+
+<div class="contenedor">
+  <div id="principal-wrap" class="principal"></div>
+  <div id="contenido" class="grilla">
+    <div class="spinner">Cargando noticias…</div>
+  </div>
+</div>
+
+<footer>© 2025 Punto Sur Sureste · Todos los derechos reservados</footer>
+
+<script>
+// ⚠️ Reemplaza con la URL de tu Worker
+const API = "https://TU-WORKER.workers.dev";
+
+let categoriaActual = "";
+
+function ver(slug) {
+  location.href = "noticia.html?slug=" + encodeURIComponent(slug);
+}
+
+function filtrar(cat, btn) {
+  categoriaActual = cat;
+  document.querySelectorAll(".filtros button").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  cargar();
+}
+
+function fecha(ts) {
+  return new Date(ts).toLocaleDateString("es-AR", {
+    day: "2-digit", month: "short", year: "numeric"
+  });
+}
+
+async function cargar() {
+  document.getElementById("contenido").innerHTML = '<div class="spinner">Cargando…</div>';
+  document.getElementById("principal-wrap").innerHTML = "";
+
+  const qs = categoriaActual ? `&categoria=${encodeURIComponent(categoriaActual)}` : "";
+  const res  = await fetch(API + `/api/noticias?limit=20${qs}`);
+  const data = await res.json();
+  const arts = data.articulos || [];
+
+  if (arts.length === 0) {
+    document.getElementById("contenido").innerHTML =
+      '<p style="color:#94a3b8;padding:2rem">No hay noticias aún.</p>';
+    return;
+  }
+
+  const principal = arts.find(n => n.es_principal) || arts[0];
+  const resto     = arts.filter(n => n.id !== principal.id);
+
+  // Bloque principal
+  const sec = resto.slice(0, 3).map(n => `
+    <div class="sec-card" onclick="ver('${n.slug}')">
+      <img src="${n.img_small || n.img_url || 'https://placehold.co/90x70/e2e8f0/94a3b8?text=+'}" alt="">
+      <div class="texto">
+        ${n.categoria ? `<div class="cat">${n.categoria}</div>` : ""}
+        <h3>${n.titulo}</h3>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("principal-wrap").innerHTML = `
+    <div class="principal-img" onclick="ver('${principal.slug}')">
+      <img src="${principal.img_url || 'https://placehold.co/800x450/e2e8f0/94a3b8?text=+'}" alt="${principal.titulo}">
+      <div class="overlay">
+        ${principal.categoria ? `<span class="cat">${principal.categoria}</span>` : ""}
+        <h2>${principal.titulo}</h2>
+      </div>
+    </div>
+    <div class="secundarias">${sec}</div>
+  `;
+
+  // Grilla del resto
+  const cards = resto.slice(3).map(n => `
+    <div class="nota-card" onclick="ver('${n.slug}')">
+      <img src="${n.img_small || n.img_url || 'https://placehold.co/400x225/e2e8f0/94a3b8?text=+'}" alt="${n.titulo}">
+      <div class="cuerpo">
+        ${n.categoria ? `<div class="cat">${n.categoria}</div>` : ""}
+        <h3>${n.titulo}</h3>
+        ${n.resumen ? `<p>${n.resumen.slice(0,90)}…</p>` : ""}
+        <div class="meta">${fecha(n.timestamp)}</div>
+      </div>
+    </div>
+  `).join("");
+
+  document.getElementById("contenido").innerHTML = cards || "";
+}
+
+cargar();
+</script>
+
+</body>
+</html>

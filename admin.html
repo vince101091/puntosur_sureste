@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin – Punto Sur</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f1f5f9; color: #1e293b; }
+
+  header {
+    background: #0f172a; color: #fff;
+    padding: 1rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 700; }
+
+  .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; padding: 1.5rem; }
+  @media(max-width:800px){ .layout { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff; border-radius: 10px;
+    padding: 1.25rem; box-shadow: 0 1px 4px #0001;
+  }
+  .card h2 { font-size: .95rem; font-weight: 700; margin-bottom: 1rem; color: #0f172a; }
+
+  label { display: block; font-size: .8rem; font-weight: 600; color: #475569; margin: .75rem 0 .25rem; }
+  input, textarea, select {
+    width: 100%; padding: .5rem .75rem;
+    border: 1px solid #e2e8f0; border-radius: 6px;
+    font-size: .9rem; color: #1e293b; background: #f8fafc;
+    transition: border .15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: #6366f1; background: #fff;
+  }
+  textarea { min-height: 120px; resize: vertical; }
+
+  .row { display: flex; gap: .75rem; align-items: center; margin-top: .75rem; }
+  .check-label { display: flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
+  input[type=checkbox] { width: auto; }
+
+  .btn {
+    display: inline-block; padding: .55rem 1.1rem;
+    border: none; border-radius: 6px; cursor: pointer;
+    font-size: .85rem; font-weight: 700; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary  { background: #6366f1; color: #fff; }
+  .btn-success  { background: #22c55e; color: #fff; }
+  .btn-danger   { background: #ef4444; color: #fff; font-size: .75rem; padding: .3rem .65rem; }
+  .btn-outline  { background: #fff; color: #6366f1; border: 1.5px solid #6366f1; }
+
+  #preview { max-width: 100%; max-height: 160px; border-radius: 6px; margin-top: .5rem; display: none; }
+
+  #msg {
+    position: fixed; top: 1rem; right: 1rem;
+    background: #22c55e; color: #fff;
+    padding: .6rem 1.2rem; border-radius: 8px;
+    font-size: .85rem; font-weight: 700;
+    display: none; z-index: 999;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th { text-align: left; padding: .5rem .6rem; background: #f1f5f9; font-weight: 700; color: #475569; }
+  td { padding: .5rem .6rem; border-top: 1px solid #f1f5f9; vertical-align: middle; }
+  .badge {
+    display: inline-block; padding: .15rem .5rem;
+    border-radius: 99px; font-size: .72rem; font-weight: 700;
+  }
+  .badge-ok     { background: #dcfce7; color: #16a34a; }
+  .badge-draft  { background: #fef9c3; color: #ca8a04; }
+  .badge-cat    { background: #ede9fe; color: #7c3aed; }
+
+  .token-bar {
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+    padding: .6rem 1.5rem; display: flex; gap: .75rem; align-items: center;
+    font-size: .85rem;
+  }
+  .token-bar input { max-width: 220px; }
+  #token-status { font-size: .78rem; color: #64748b; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ Panel Punto Sur</h1>
+</header>
+
+<!-- Token bar -->
+<div class="token-bar">
+  <label style="margin:0;font-weight:700;white-space:nowrap">Token:</label>
+  <input type="password" id="token" placeholder="tu contraseña de admin">
+  <button class="btn btn-outline" onclick="saveToken()">Guardar</button>
+  <span id="token-status"></span>
+</div>
+
+<div id="msg"></div>
+
+<div class="layout">
+
+  <!-- FORMULARIO -->
+  <div class="card">
+    <h2>📝 Nueva nota</h2>
+
+    <label>Título *</label>
+    <input id="titulo" placeholder="Título de la nota">
+
+    <label>Categoría</label>
+    <select id="categoria">
+      <option value="">-- sin categoría --</option>
+      <option>Política</option>
+      <option>Sociedad</option>
+      <option>Seguridad</option>
+      <option>Economía</option>
+      <option>Cultura</option>
+      <option>Deportes</option>
+    </select>
+
+    <label>Autor</label>
+    <input id="autor" placeholder="Nombre del periodista">
+
+    <label>Resumen (bajada)</label>
+    <textarea id="resumen" placeholder="2 o 3 líneas que aparecen en la portada"></textarea>
+
+    <label>Cuerpo de la nota</label>
+    <textarea id="cuerpo" style="min-height:180px" placeholder="Texto completo. Podés usar saltos de línea."></textarea>
+
+    <label>Imagen principal</label>
+    <input type="file" id="file" accept="image/*" onchange="previewImg()">
+    <img id="preview">
+    <div class="row">
+      <button class="btn btn-outline" onclick="upload()">⬆ Subir imagen</button>
+      <span id="upload-status" style="font-size:.78rem;color:#64748b"></span>
+    </div>
+    <label>URL imagen (se llena sola al subir, o pégala)</label>
+    <input id="imgUrl" placeholder="https://...">
+
+    <div class="row" style="margin-top:1rem">
+      <label class="check-label">
+        <input type="checkbox" id="publicado"> Publicar
+      </label>
+      <label class="check-label">
+        <input type="checkbox" id="esPrincipal"> Nota principal
+      </label>
+    </div>
+
+    <div class="row" style="margin-top:1rem">
+      <button class="btn btn-success" onclick="publicar()">💾 Guardar nota</button>
+      <button class="btn btn-outline" onclick="limpiar()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- LISTA -->
+  <div class="card">
+    <h2>📋 Notas publicadas</h2>
+    <div class="row" style="margin-bottom:.75rem">
+      <button class="btn btn-primary" onclick="listar()">🔄 Actualizar lista</button>
+    </div>
+    <div id="lista">
+      <p style="color:#94a3b8;font-size:.85rem">Hacé clic en "Actualizar lista"</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ⚠️ Reemplaza con la URL de tu Worker
+const API = "https://TU-WORKER.workers.dev";
+
+// ── Token ───────────────────────────────────────────────────
+function saveToken() {
+  const t = document.getElementById("token").value.trim();
+  if (!t) return;
+  localStorage.setItem("puntosur_token", t);
+  document.getElementById("token-status").textContent = "✔ guardado";
+}
+function getToken() {
+  return localStorage.getItem("puntosur_token") || "";
+}
+window.addEventListener("load", () => {
+  const t = getToken();
+  if (t) {
+    document.getElementById("token").value = t;
+    document.getElementById("token-status").textContent = "✔ cargado";
+  }
+});
+
+// ── Notificación ────────────────────────────────────────────
+function msg(txt, ok = true) {
+  const el = document.getElementById("msg");
+  el.textContent = txt;
+  el.style.background = ok ? "#22c55e" : "#ef4444";
+  el.style.display = "block";
+  setTimeout(() => el.style.display = "none", 2500);
+}
+
+// ── Preview imagen ───────────────────────────────────────────
+function previewImg() {
+  const file = document.getElementById("file").files[0];
+  if (!file) return;
+  const prev = document.getElementById("preview");
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = "block";
+}
+
+// ── Subir imagen ─────────────────────────────────────────────
+async function upload() {
+  const file = document.getElementById("file").files[0];
+  if (!file) { msg("Seleccioná un archivo primero", false); return; }
+
+  document.getElementById("upload-status").textContent = "Subiendo…";
+
+  const form = new FormData();
+  form.append("file", file);
+
+  try {
+    const res = await fetch(API + "/api/admin/upload", {
+      method: "POST",
+      headers: { "X-Admin-Token": getToken() },
+      body: form
+    });
+    const d = await res.json();
+    if (d.url) {
+      document.getElementById("imgUrl").value = d.url;
+      document.getElementById("upload-status").textContent = "✔ subida";
+      msg("Imagen subida correctamente");
+    } else {
+      msg("Error: " + JSON.stringify(d), false);
+    }
+  } catch (e) {
+    msg("Error de red: " + e.message, false);
+    document.getElementById("upload-status").textContent = "";
+  }
+}
+
+// ── Publicar ─────────────────────────────────────────────────
+async function publicar() {
+  const titulo = document.getElementById("titulo").value.trim();
+  if (!titulo) { msg("El título es obligatorio", false); return; }
+
+  const body = {
+    titulo,
+    resumen:     document.getElementById("resumen").value,
+    cuerpo:      document.getElementById("cuerpo").value,
+    categoria:   document.getElementById("categoria").value,
+    autor:       document.getElementById("autor").value,
+    imgUrl:      document.getElementById("imgUrl").value,
+    imgSmall:    document.getElementById("imgUrl").value,
+    esPrincipal: document.getElementById("esPrincipal").checked,
+    publicado:   document.getElementById("publicado").checked
+  };
+
+  try {
+    const res = await fetch(API + "/api/admin/publicar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Admin-Token": getToken()
+      },
+      body: JSON.stringify(body)
+    });
+    const d = await res.json();
+    if (d.ok) {
+      msg("✔ Nota guardada");
+      limpiar();
+      listar();
+    } else {
+      msg("Error: " + JSON.stringify(d), false);
+    }
+  } catch (e) {
+    msg("Error de red: " + e.message, false);
+  }
+}
+
+// ── Listar ───────────────────────────────────────────────────
+async function listar() {
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "<p style='color:#94a3b8;font-size:.85rem'>Cargando…</p>";
+
+  try {
+    const res = await fetch(API + "/api/admin/lista", {
+      headers: { "X-Admin-Token": getToken() }
+    });
+    const d = await res.json();
+
+    if (!d.articulos || d.articulos.length === 0) {
+      lista.innerHTML = "<p style='color:#94a3b8;font-size:.85rem'>Sin notas aún.</p>";
+      return;
+    }
+
+    lista.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Cat.</th>
+            <th>Estado</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${d.articulos.map(n => `
+            <tr>
+              <td>${n.titulo}</td>
+              <td>${n.categoria ? `<span class="badge badge-cat">${n.categoria}</span>` : "—"}</td>
+              <td>
+                <span class="badge ${n.publicado ? "badge-ok" : "badge-draft"}">
+                  ${n.publicado ? "Publicada" : "Borrador"}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-danger" onclick="eliminar(${n.id})">Borrar</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    lista.innerHTML = `<p style='color:#ef4444;font-size:.85rem'>Error: ${e.message}</p>`;
+  }
+}
+
+// ── Eliminar ─────────────────────────────────────────────────
+async function eliminar(id) {
+  if (!confirm("¿Borrar esta nota?")) return;
+
+  try {
+    await fetch(API + "/api/admin/eliminar?id=" + id, {
+      method: "DELETE",
+      headers: { "X-Admin-Token": getToken() }
+    });
+    msg("Nota eliminada");
+    listar();
+  } catch (e) {
+    msg("Error: " + e.message, false);
+  }
+}
+
+// ── Limpiar form ─────────────────────────────────────────────
+function limpiar() {
+  ["titulo","resumen","cuerpo","autor","imgUrl"].forEach(id => {
+    document.getElementById(id).value = "";
+  });
+  document.getElementById("categoria").value = "";
+  document.getElementById("publicado").checked = false;
+  document.getElementById("esPrincipal").checked = false;
+  document.getElementById("preview").style.display = "none";
+  document.getElementById("upload-status").textContent = "";
+}
+</script>
+
+</body>
+</html>
